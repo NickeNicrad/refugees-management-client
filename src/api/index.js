@@ -88,7 +88,7 @@ export const getAllRefugies = async () =>
 {
     try {
         const response = await API.get('/refugee/all');
-        return response.data;
+        return response;
     } catch (error) {
         return error.response.data;
     }

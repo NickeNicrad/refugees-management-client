@@ -36,9 +36,9 @@ function Refugees() {
 
 	const loadRefugies = () => {
 		getAllRefugies()
-			.then((data) => {
-				if (Array.isArray(data)) return setRefugees([...data]);
-				alert(data);
+			.then((response) => {
+				if (response.status === 200) return setRefugees([...response.data]);
+				alert(response.data);
 			})
 			.catch((error) => console.log(error));
 	};

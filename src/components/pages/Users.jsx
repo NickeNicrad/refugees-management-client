@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { deleteUser, getAllUsers, updateUserState } from '../../api';
+import {
+	deleteUser,
+	getAllChildren,
+	getAllRefugies,
+	getAllUsers,
+	updateUserState,
+} from '../../api';
 
 function Users() {
 	const [users, setUsers] = useState([]);
@@ -25,6 +31,24 @@ function Users() {
 
 	const loadUsers = () => {
 		getAllUsers()
+			.then((response) => {
+				if (response.status === 200) return setUsers([...response.data]);
+				console.log(response);
+			})
+			.catch((error) => console.log(error));
+	};
+
+	const loadRefugees = () => {
+		getAllRefugies()
+			.then((response) => {
+				if (response.status === 200) return setUsers([...response.data]);
+				console.log(response);
+			})
+			.catch((error) => console.log(error));
+	};
+
+	const loadChildren = () => {
+		getAllChildren()
 			.then((response) => {
 				if (response.status === 200) return setUsers([...response.data]);
 				console.log(response);

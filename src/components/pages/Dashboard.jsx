@@ -8,14 +8,16 @@ function Dashboard() {
 	const loadRefugees = () => {
 		getAllRefugies()
 			.then((response) => {
-				setRefugees(response);
+				if (response.status === 200) return setRefugees([...response.data]);
 			})
 			.catch((error) => console.log(error));
 	};
 
 	const loadChildren = () => {
 		getAllChildren()
-			.then((response) => setChildren(response.data))
+			.then((response) => {
+				if (response.status === 200) return setChildren(response.data);
+			})
 			.catch((error) => console.log(error));
 	};
 

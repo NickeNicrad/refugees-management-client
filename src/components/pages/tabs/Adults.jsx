@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
 	createRefugee,
-	deleteRefugee,
 	getAllRefugies,
 	getAllCountries,
 	getAllStates,
@@ -54,19 +53,6 @@ function Adults() {
 	const handleUpdate = (data) => {
 		setValues({ ...data });
 	};
-
-	const handleDelete = (data) => {
-		if (window.confirm('voulez-vous vraiment supprimer?')) {
-			deleteRefugee(data.id)
-				.then((data) => {
-					loadRefugies();
-					alert(data);
-				})
-				.catch((error) => console.log(error));
-		}
-	};
-
-	console.log('values: ', values.dest_from);
 
 	const btnCancel = () => {
 		setValues({
@@ -122,9 +108,9 @@ function Adults() {
 
 	const loadRefugies = () => {
 		getAllRefugies()
-			.then((data) => {
-				if (Array.isArray(data)) return setRefugees([...data]);
-				alert(data);
+			.then((response) => {
+				if (response.status) return setRefugees([...response.data]);
+				alert(response.data);
 			})
 			.catch((error) => console.log(error));
 	};
@@ -134,13 +120,6 @@ function Adults() {
 			(item.fname + ' ' + item.lname)
 				.toLowerCase()
 				.indexOf(val.search.toLowerCase()) !== -1,
-	);
-
-	const filteredPartners = refuees.filter(
-		(item) =>
-			(item.fname + ' ' + item.lname)
-				.toLowerCase()
-				.indexOf(values.partner.toLowerCase()) !== -1,
 	);
 
 	useEffect(() => {
@@ -284,41 +263,28 @@ function Adults() {
 									</div>
 								</div>
 								<div className='dropdown'>
-									<input
-										type='search'
+									<select
 										className='form-control'
-										placeholder='Nom du Partenaire'
-										id='partner-dropdown'
-										data-bs-toggle='dropdown'
-										aria-expanded='false'
-										value={values.partner}
 										disabled={!values.gender || values.married === false}
 										onChange={(e) =>
 											setValues({ ...values, partner: e.target.value })
-										}
-									/>
-									<ul
-										className='dropdown-menu w-100 p-0'
-										aria-labelledby='partner-dropdown'>
-										{filteredPartners.length > 0 ? (
-											filteredPartners &&
-											filteredPartners
+										}>
+										<option disabled selected>
+											Nom du Partenaire
+										</option>
+										{refuees &&
+											refuees
 												.filter((item) => item.gender !== values.gender)
 												.map((item, index) => (
-													<li
+													<option
 														key={index}
-														className='list-group-item list-group-item-action text-capitalize w-100'
 														style={{ fontSize: 13 }}
 														onClick={initPartner.bind(this, item)}>
-														{item.fname} {item.lname}
-													</li>
-												))
-										) : (
-											<li className='list-group-item list-group-item-action text-capitalize w-100'>
-												votre partenaire n'existe pas dans la base de données
-											</li>
-										)}
-									</ul>
+														{item.fname && item.fname}{' '}
+														{item.lname && item.lname}
+													</option>
+												))}
+									</select>
 								</div>
 							</div>
 
