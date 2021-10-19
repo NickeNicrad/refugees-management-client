@@ -10,6 +10,8 @@ import {
 
 function Users() {
 	const [users, setUsers] = useState([]);
+	const [refugees, setRefugees] = useState([]);
+	const [children, setChildren] = useState([]);
 	const [val, setVal] = useState({
 		search: '',
 	});
@@ -41,7 +43,7 @@ function Users() {
 	const loadRefugees = () => {
 		getAllRefugies()
 			.then((response) => {
-				if (response.status === 200) return setUsers([...response.data]);
+				if (response.status === 200) return setRefugees([...response.data]);
 				console.log(response);
 			})
 			.catch((error) => console.log(error));
@@ -50,7 +52,7 @@ function Users() {
 	const loadChildren = () => {
 		getAllChildren()
 			.then((response) => {
-				if (response.status === 200) return setUsers([...response.data]);
+				if (response.status === 200) return setChildren([...response.data]);
 				console.log(response);
 			})
 			.catch((error) => console.log(error));
@@ -88,8 +90,18 @@ function Users() {
 				.indexOf(val.search.toLowerCase()) !== -1,
 	);
 
+	const filteredRefugiesbyUser = (id) => {
+		return refugees.filter((item) => item.uid === id);
+	};
+
+	const filteredChildrenbyUser = (id) => {
+		return children.filter((item) => item.uid === id);
+	};
+
 	useEffect(() => {
 		loadUsers();
+		loadRefugees();
+		loadChildren();
 	}, []);
 	return (
 		<div className='container'>
@@ -142,12 +154,17 @@ function Users() {
 											<h5 className='mb-1 text-capitalize'>
 												{user.fname && user.fname} {user.lname && user.lname}
 											</h5>
-											<small className='text-muted mb-3 d-block'>
+											<small className='text-muted mb-1 d-block'>
 												{user.role && user.role} |{' '}
 												{user.active && user.active === true
 													? 'activé'
 													: 'desactivé'}
 											</small>
+											<small className='text-muted mb-3 d-block'>
+												{filteredRefugiesbyUser(user.id).length} Adultes |{' '}
+												{filteredChildrenbyUser(user.id).length} Enfants
+											</small>
+
 											<ul className='list-inline mb-0'>
 												<li className='list-inline-item'>
 													<Link

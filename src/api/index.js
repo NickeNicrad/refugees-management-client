@@ -94,10 +94,10 @@ export const getAllRefugies = async () =>
     }
 }
 
-export const updateRefugee = async (id) =>
+export const updateRefugee = async (data) =>
 {
     try {
-        const response = await API.delete(`/refugee/update/${id}`);
+        const response = await API.patch(`/refugee/update/${data.id}`, data);
         return response.data;
     } catch (error) {
         return error.response.data;

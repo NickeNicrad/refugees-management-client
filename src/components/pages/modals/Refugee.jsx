@@ -7,6 +7,7 @@ import {
 } from '../../../api';
 
 function Refugee(props) {
+	const [uid] = useState(JSON.parse(localStorage.getItem('uid')));
 	const [values, setValues] = useState({
 		fname: '',
 		lname: '',
@@ -31,6 +32,7 @@ function Refugee(props) {
 		createChild({
 			...values,
 			parents: `${props.fname && props.fname} ${props.lname && props.lname}`,
+			uid,
 		})
 			.then((response) => {
 				loadChildren();

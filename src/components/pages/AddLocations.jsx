@@ -5,12 +5,13 @@ import {
 	createCountry,
 	getAllCountries,
 	getAllStates,
+	getAllCities,
 } from '../../api';
 
 function AddLocations() {
 	const [values, setValues] = useState({
-		countryId: '',
-		stateId: '',
+		country_id: '',
+		state_id: '',
 		countryName: '',
 		stateName: '',
 		cityName: '',
@@ -18,6 +19,14 @@ function AddLocations() {
 
 	const [countries, setCountries] = useState([]);
 	const [states, setStates] = useState([]);
+	const [cities, setCities] = useState([]);
+
+	const filteredCountries = countries
+		.filter((item) => item.countryName === values.countryName)
+		.shift();
+	const filteredStates = states
+		.filter((item) => item.stateName === values.stateName)
+		.shift();
 
 	const handleCreateCountry = (e) => {
 		e.preventDefault();
@@ -25,11 +34,18 @@ function AddLocations() {
 			.then((response) => {
 				if (response.status === 200) {
 					alert(response.data);
+					setValues({
+						...values,
+						countryName: '',
+						stateName: '',
+						cityName: '',
+					});
 					loadCountries();
 					loadStates();
+					loadCities();
 				} else {
-					alert(response.data);
-					console.log(response.data);
+					alert(response);
+					console.log(response);
 				}
 			})
 			.catch((error) => {
@@ -40,15 +56,22 @@ function AddLocations() {
 
 	const handleCreateState = (e) => {
 		e.preventDefault();
-		createState(values)
+		createState({ ...values, country_id: filteredCountries.id })
 			.then((response) => {
 				if (response.status === 200) {
 					alert(response.data);
+					setValues({
+						...values,
+						countryName: '',
+						stateName: '',
+						cityName: '',
+					});
 					loadCountries();
 					loadStates();
+					loadCities();
 				} else {
-					alert(response.data);
-					console.log(response.data);
+					alert(response);
+					console.log(response);
 				}
 			})
 			.catch((error) => {
@@ -59,29 +82,28 @@ function AddLocations() {
 
 	const handleCreateCity = (e) => {
 		e.preventDefault();
-		createCity(values)
+		createCity({ ...values, state_id: filteredStates.id })
 			.then((response) => {
 				if (response.status === 200) {
 					alert(response.data);
+					setValues({
+						...values,
+						countryName: '',
+						stateName: '',
+						cityName: '',
+					});
 					loadCountries();
 					loadStates();
+					loadCities();
 				} else {
-					alert(response.data);
-					console.log(response.data);
+					alert(response);
+					console.log(response);
 				}
 			})
 			.catch((error) => {
 				alert(error);
 				console.log(error);
 			});
-	};
-
-	const initCountry = (country) => {
-		setValues({ ...values, countryId: country.id });
-	};
-
-	const initState = (states) => {
-		setValues({ ...values, statesId: states.id });
 	};
 
 	const loadCountries = () => {
@@ -100,16 +122,85 @@ function AddLocations() {
 			.catch();
 	};
 
+	const loadCities = () => {
+		getAllCities()
+			.then((response) => {
+				if (response.status === 200) return setCities([...response.data]);
+			})
+			.catch();
+	};
+
 	useEffect(() => {
 		loadCountries();
 		loadStates();
+		loadCities();
 	}, []);
 
 	return (
 		<div className='page-content'>
 			<div className='container'>
 				<div className='row'>
-					<div className='col'></div>
+					<div className='col'>
+						{/*  */}
+						{countries.length > 0 ? (
+							countries.map((country, index) => (
+								<div key={index} className='accordion' id={`accordion${index}`}>
+									<div className='accordion-item rounded mb-2'>
+										<h2 className='accordion-header' id={`headingOne${index}`}>
+											<button
+												className='accordion-button border-0 mb-0 bg-transparent'
+												type='button'
+												data-bs-toggle='collapse'
+												data-bs-target={`#collapseOne${index}`}
+												aria-expanded='true'
+												aria-controls={`collapseOne${index}`}>
+												{country.countryName}
+											</button>
+										</h2>
+										<div
+											id={`collapseOne${index}`}
+											className='accordion-collapse border-0 collapse show'
+											aria-labelledby={`headingOne${index}`}
+											data-bs-parent={`#accordion${index}`}>
+											<div className='accordion-body text-muted'>
+												{states &&
+													states
+														.filter((item) => item.country_id === country.id)
+														.map((states, index) => (
+															<div key={index} className='dropdown'>
+																<span
+																	className='dropdown-item dropdown-toggle text-capitalize'
+																	data-bs-toggle='dropdown'>
+																	{states.stateName}
+																</span>
+																<ul className='dropdown-menu p-0 w-100'>
+																	<li className='dropdown-submenu'>
+																		{cities &&
+																			cities
+																				.filter(
+																					(item) => item.state_id === states.id,
+																				)
+																				.map((city, index) => (
+																					<span
+																						key={index}
+																						className='dropdown-item px-5 text-capitalize'>
+																						{city.cityName && city.cityName}
+																					</span>
+																				))}
+																	</li>
+																</ul>
+															</div>
+														))}
+											</div>
+										</div>
+									</div>
+								</div>
+							))
+						) : (
+							<div>aucun données disponible</div>
+						)}
+						{/*  */}
+					</div>
 					<div className='col'>
 						<div className='row'>
 							<div className='card' style={{ height: '20vh' }}>
@@ -124,7 +215,7 @@ function AddLocations() {
 													<input
 														className='form-control'
 														type='text'
-														placeholder='Pays'
+														placeholder='Nom du Pays'
 														value={values.countryName}
 														onChange={(e) =>
 															setValues({
@@ -173,15 +264,11 @@ function AddLocations() {
 															})
 														}>
 														<option selected disabled>
-															Pays...
+															Selectionnez un Pays...
 														</option>
 														{countries &&
 															countries.map((item, index) => (
-																<option
-																	key={index}
-																	onClick={initCountry.bind(this, item)}>
-																	{item.countryName}
-																</option>
+																<option key={index}>{item.countryName}</option>
 															))}
 													</select>
 													<div className='help-block with-errors' />
@@ -231,16 +318,45 @@ function AddLocations() {
 										<div className='messages' />
 
 										<div className='row'>
-											<div className='col-md-6'>
+											<div className='col-md-4'>
 												<div className='form-group'>
-													<select className='form-control'>
-														<option value='Country'>Province...</option>
+													<select
+														className='form-control'
+														onChange={(e) =>
+															setValues({
+																...values,
+																countryName: e.target.value,
+															})
+														}>
+														<option selected disabled>
+															Selectionnez Pays...
+														</option>
+														{countries &&
+															countries.map((item, index) => (
+																<option key={index}>{item.countryName}</option>
+															))}
+													</select>
+													<div className='help-block with-errors' />
+												</div>
+											</div>
+
+											<div className='col-md-4'>
+												<div className='form-group'>
+													<select
+														className='form-control'
+														onChange={(e) =>
+															setValues({
+																...values,
+																stateName: e.target.value,
+															})
+														}>
+														<option value='Country'>
+															Selectionnez Province...
+														</option>
 														{states &&
 															states.map((item, index) => (
-																<option
-																	key={index}
-																	onClick={initState.bind(this, item)}>
-																	{item.stateName}
+																<option key={index}>
+																	{item.stateName && item.stateName}
 																</option>
 															))}
 													</select>
@@ -248,7 +364,7 @@ function AddLocations() {
 												</div>
 											</div>
 
-											<div className='col-md-6'>
+											<div className='col-md-4'>
 												<div className='form-group'>
 													<input
 														className='form-control'

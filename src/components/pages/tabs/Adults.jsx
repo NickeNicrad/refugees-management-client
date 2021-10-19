@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
 	createRefugee,
+	updateRefugee,
 	getAllRefugies,
 	getAllCountries,
 	getAllStates,
@@ -8,6 +9,7 @@ import {
 } from '../../../api';
 import RefCard from '../modals/RefCard';
 import Refugee from '../modals/Refugee';
+import Report from '../modals/Report';
 
 function Adults() {
 	const [uid] = useState(JSON.parse(localStorage.getItem('uid')));
@@ -17,8 +19,11 @@ function Adults() {
 	const [values, setValues] = useState({
 		fname: '',
 		lname: '',
+		country: '',
+		state: '',
+		city: '',
 		dest_from: '',
-		destination: '',
+		camp: '',
 		gender: '',
 		partner: '',
 		dob: '',
@@ -30,28 +35,43 @@ function Adults() {
 	const [states, setStates] = useState([]);
 	const [cities, setCities] = useState([]);
 
-	const handleCreate = (e) => {
+	const handleCreateAndUpadte = (e) => {
 		e.preventDefault();
-		createRefugee({ ...values, uid })
-			.then((data) => {
-				loadRefugies();
-				alert(data);
-				setValues({
-					fname: '',
-					lname: '',
-					dest_from: '',
-					destination: '',
-					gender: '',
-					partner: '',
-					dob: '',
-					married: false,
-				});
-			})
-			.catch((error) => console.log(error));
-	};
-
-	const handleUpdate = (data) => {
-		setValues({ ...data });
+		val.isUpdateInited === true
+			? updateRefugee({ ...values, uid })
+					.then((data) => {
+						loadRefugies();
+						alert(data);
+						setValues({
+							fname: '',
+							lname: '',
+							dest_from: '',
+							camp: '',
+							gender: '',
+							partner: '',
+							dob: '',
+							married: false,
+						});
+						setVal({ ...val, isUpdateInited: false });
+					})
+					.catch((error) => console.log(error))
+			: createRefugee({ ...values, uid })
+					.then((data) => {
+						loadRefugies();
+						alert(data);
+						setValues({
+							fname: '',
+							lname: '',
+							dest_from: '',
+							camp: '',
+							gender: '',
+							partner: '',
+							dob: '',
+							married: false,
+						});
+						setVal({ ...val, isUpdateInited: false });
+					})
+					.catch((error) => console.log(error));
 	};
 
 	const btnCancel = () => {
@@ -62,12 +82,18 @@ function Adults() {
 			state: '',
 			city: '',
 			dest_from: '',
-			destination: '',
+			camp: '',
 			gender: '',
 			partner: '',
 			dob: '',
 			married: true,
 		});
+		setVal({ ...val, isUpdateInited: false });
+	};
+
+	const initUpdate = (data) => {
+		setValues({ ...data });
+		setVal({ ...val, isUpdateInited: true });
 	};
 
 	const initRefugee = (data) => {
@@ -76,6 +102,12 @@ function Adults() {
 
 	const initPartner = (data) => {
 		setValues({ ...values, partner: `${data.fname} ${data.lname}` });
+	};
+
+	const initLocation = (e) => {
+		e.preventDefault();
+		const { country, state, city } = values;
+		setValues({ ...values, dest_from: `${country}, ${state}, ${city}` });
 	};
 
 	const loadCountries = () => {
@@ -109,18 +141,42 @@ function Adults() {
 	const loadRefugies = () => {
 		getAllRefugies()
 			.then((response) => {
-				if (response.status) return setRefugees([...response.data]);
-				alert(response.data);
+				if (response.status === 200) return setRefugees([...response.data]);
+				console.log(response);
 			})
 			.catch((error) => console.log(error));
 	};
 
 	const filteredRefugees = refuees.filter(
 		(item) =>
-			(item.fname + ' ' + item.lname)
+			(
+				item.fname +
+				' ' +
+				item.lname +
+				' ' +
+				item.dest_from +
+				' ' +
+				item.camp +
+				' ' +
+				item.gender
+			)
 				.toLowerCase()
 				.indexOf(val.search.toLowerCase()) !== -1,
 	);
+
+	const filteredCountries = countries
+		.filter((item) => values.country && item.countryName === values.country)
+		.shift();
+	// const filteredStates = states
+	// 	.filter((item) => item.country_id === filteredCountries.id)
+	// 	.shift();
+
+	const printList = () => {
+		const pageToPrint = document.querySelector('#print-list').innerHTML;
+		document.body.innerHTML = pageToPrint;
+		window.print();
+		window.location.reload();
+	};
 
 	useEffect(() => {
 		loadRefugies();
@@ -148,7 +204,7 @@ function Adults() {
 			<div className='col-lg-3 p-0 d-none d-xl-block'>
 				<div className='card card-input'>
 					<div className='card-body px-3 pb-1'>
-						<form onSubmit={handleCreate}>
+						<form onSubmit={handleCreateAndUpadte}>
 							<div className='form-group'>
 								<input
 									type='text'
@@ -179,22 +235,20 @@ function Adults() {
 									data-bs-toggle='modal'
 									data-bs-target='#locationsModal'
 									value={values.dest_from}
-									// onChange={(e) =>
-									// 	setValues({ ...values, dest_from: e.target.value })
-									// }
+									onChange={(e) =>
+										setValues({ ...values, dest_from: e.target.value })
+									}
 								/>
 							</div>
 							<div className='form-group'>
 								<input
 									type='text'
 									className='form-control'
-									placeholder='Lieu de Destination'
-									data-bs-toggle='modal'
-									data-bs-target='#locationsModal'
-									value={values.destination}
-									// onChange={(e) =>
-									// 	setValues({ ...values, destination: e.target.value })
-									// }
+									placeholder='Camp'
+									value={values.camp}
+									onChange={(e) =>
+										setValues({ ...values, camp: e.target.value })
+									}
 								/>
 							</div>
 							<div className='row'>
@@ -219,11 +273,11 @@ function Adults() {
 											onChange={(e) =>
 												setValues({ ...values, gender: e.target.value })
 											}>
-											<option disabled selected>
+											<option disabled selected={values.gender === ''}>
 												Sexe
 											</option>
-											<option>M</option>
-											<option>F</option>
+											<option selected={values.gender === 'M'}>M</option>
+											<option selected={values.gender === 'F'}>F</option>
 										</select>
 									</div>
 								</div>
@@ -236,9 +290,12 @@ function Adults() {
 												className='form-check-input'
 												type='checkbox'
 												id='check_married'
-												value={values.married}
+												checked={values.married}
 												onChange={(e) =>
-													setValues({ ...values, married: e.target.value })
+													setValues({
+														...values,
+														married: e.target.checked,
+													})
 												}
 											/>
 											<label
@@ -265,11 +322,15 @@ function Adults() {
 								<div className='dropdown'>
 									<select
 										className='form-control'
-										disabled={!values.gender || values.married === false}
+										disabled={values.gender === '' || values.married === false}
 										onChange={(e) =>
 											setValues({ ...values, partner: e.target.value })
 										}>
-										<option disabled selected>
+										<option
+											disabled
+											selected={
+												values.partner === '' || values.partner === null
+											}>
 											Nom du Partenaire
 										</option>
 										{refuees &&
@@ -277,6 +338,7 @@ function Adults() {
 												.filter((item) => item.gender !== values.gender)
 												.map((item, index) => (
 													<option
+														selected={values.partner !== ''}
 														key={index}
 														style={{ fontSize: 13 }}
 														onClick={initPartner.bind(this, item)}>
@@ -292,7 +354,7 @@ function Adults() {
 								<button
 									type='submit'
 									className='btn btn-outline-primary btn-sm'>
-									ajouter
+									{val.isUpdateInited === true ? 'mettre ajour' : 'ajouter'}
 								</button>
 								<button
 									type='reset'
@@ -310,13 +372,30 @@ function Adults() {
 					<div className='card-body'>
 						<div className='d-flex justify-content-between align-items-center py-2'>
 							<h6 className='text-muted'>Liste des Refugiés</h6>
-							<input
-								type='search'
-								className='form-control w-25 float-end d-none d-xl-block'
-								placeholder='recherche...'
-								value={val.search}
-								onChange={(e) => setVal({ ...val, search: e.target.value })}
-							/>
+
+							<div className='d-flex align-items-center'>
+								<input
+									type='search'
+									className='form-control d-none d-xl-block mx-1'
+									placeholder='recherche...'
+									value={val.search}
+									onChange={(e) => setVal({ ...val, search: e.target.value })}
+								/>
+								<div className='dropdown'>
+									<button
+										className='btn btn-outline-secondary btn-sm px-2'
+										style={{ fontSize: 11 }}
+										data-bs-toggle='dropdown'>
+										<i className='la la-filter' style={{ fontSize: 15 }}></i>
+									</button>
+									<ul className='dropdown-menu'>
+										<li className='dropdown-item'>Age</li>
+										<li className='dropdown-item'>Sexe</li>
+										<li className='dropdown-item'>Camp</li>
+										<li className='dropdown-item'>Provenance</li>
+									</ul>
+								</div>
+							</div>
 						</div>
 						<div className='table-responsive border-bottom-0 card-table'>
 							<table className='cart-table table-striped table-hover table text-center mb-0 table-font'>
@@ -340,7 +419,7 @@ function Adults() {
 										<th
 											scope='col'
 											style={{ fontSize: 14, fontWeight: 'bold' }}>
-											Destination
+											Camp
 										</th>
 										<th
 											scope='col'
@@ -376,7 +455,7 @@ function Adults() {
 													{item.dest_from && item.dest_from}
 												</td>
 												<td className='text-capitalize'>
-													{item.destination && item.destination}
+													{item.camp && item.camp}
 												</td>
 												<td className='text-capitalize'>
 													{item.gender && item.gender}
@@ -389,7 +468,7 @@ function Adults() {
 												<td className='border-right-0'>
 													<button
 														className='btn btn-outline-success btn-sm btn-table'
-														onClick={handleUpdate.bind(this, item)}>
+														onClick={initUpdate.bind(this, item)}>
 														<i
 															className='las la-edit'
 															data-toggle='tooltip'
@@ -404,10 +483,33 @@ function Adults() {
 							</table>
 						</div>
 					</div>
+					<div className='d-flex justify-content-between align-items-center px-3 pb-2'>
+						<div className='d-flex'>
+							<button
+								className='btn btn-outline-secondary btn-sm px-2'
+								style={{ fontSize: 11 }}
+								onClick={printList}>
+								<i className='la la-print' style={{ fontSize: 13 }}></i>
+								<span
+									data-toggle='tooltip'
+									title='imprimer le rapport'
+									data-placement='bottom'></span>
+								imprimer
+							</button>
+						</div>
+						<div>
+							<span style={{ fontSize: 13 }}>
+								<span style={{ fontWeight: 'bold' }}>Total enregistrer:</span>{' '}
+								{filteredRefugees.length} Refugié(e)s
+							</span>
+						</div>
+					</div>
 				</div>
 			</div>
+
 			<RefCard {...refugeeInited} />
 			<Refugee {...refugeeInited} />
+			<Report filteredRefugees={filteredRefugees} />
 			{/* modal */}
 
 			<div
@@ -438,10 +540,12 @@ function Adults() {
 										onChange={(e) =>
 											setValues({
 												...values,
-												dest_from: e.target.value,
+												country: e.target.value,
 											})
 										}>
-										<option value='Country'>Selectionnez Pays...</option>
+										<option disabled selected={values.country === ''}>
+											Selectionnez le Pays...
+										</option>
 										{countries.map((item, index) => (
 											<option key={index} className='text-capitalize'>
 												{item.countryName && item.countryName}
@@ -452,8 +556,17 @@ function Adults() {
 								</div>
 
 								<div className='form-group'>
-									<select className='form-control'>
-										<option selected>Selectionnnez Province...</option>
+									<select
+										className='form-control'
+										onChange={(e) =>
+											setValues({
+												...values,
+												state: e.target.value,
+											})
+										}>
+										<option disabled selected={values.state === ''}>
+											Selectionnnez la Province...
+										</option>
 										{states &&
 											states.map((item, index) => (
 												<option key={index} className='text-capitalize'>
@@ -466,8 +579,15 @@ function Adults() {
 								<div className='form-group'>
 									<select
 										className='form-control'
-										onChange={(e) => values.dest_from.push(e.target.value)}>
-										<option value='Country'>Selectionnez Ville...</option>
+										onChange={(e) =>
+											setValues({
+												...values,
+												city: e.target.value,
+											})
+										}>
+										<option disabled selected={values.city === ''}>
+											Selectionnez la Ville...
+										</option>
 										{cities &&
 											cities.map((item, index) => (
 												<option key={index} className='text-capitalize'>
@@ -479,7 +599,12 @@ function Adults() {
 								</div>
 
 								<div className='row px-2'>
-									<button className='btn btn-primary btn-sm'>ajouter</button>
+									<button
+										className='btn btn-primary btn-sm'
+										data-bs-dismiss='modal'
+										onClick={initLocation}>
+										ajouter
+									</button>
 
 									<button type='reset' className='btn btn-danger btn-sm my-2'>
 										annuler

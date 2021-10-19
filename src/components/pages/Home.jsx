@@ -35,6 +35,19 @@ function Home() {
 							Familles
 						</button>
 					</li>
+					<li className='nav-item' role='presentation'>
+						<button
+							className='nav-link'
+							id='profile-tab'
+							data-bs-toggle='tab'
+							data-bs-target='#history'
+							type='button'
+							role='tab'
+							aria-controls='history'
+							aria-selected='false'>
+							Historiques
+						</button>
+					</li>
 				</ul>
 
 				{/* tabs content */}
@@ -52,6 +65,13 @@ function Home() {
 						role='tabpanel'
 						aria-labelledby='profile-tab'>
 						familles
+					</div>
+					<div
+						className='tab-pane'
+						id='history'
+						role='tabpanel'
+						aria-labelledby='profile-tab'>
+						Historique
 					</div>
 				</div>
 			</div>
